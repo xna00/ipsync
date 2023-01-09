@@ -63,9 +63,7 @@ export function search(subject: string): Promise<number[]> {
 }
 
 export function detail(uids: number[]): Promise<A[]> {
-  console.log('uids:', uids);
   const ret = uids.map(uid => new Promise<A>((res) => {
-    console.log('uid:', uid);
     const ret: A = { subject: '', text: '', uid };
 
     const f = imap.seq.fetch([uid], {
@@ -74,7 +72,6 @@ export function detail(uids: number[]): Promise<A[]> {
     });
     f.on('message', function(msg) {
       msg.on('body', function(stream, info) {
-        console.log(info);
         var buffer = '';
         stream.on('data', function(chunk) {
           buffer += chunk.toString('utf8');
