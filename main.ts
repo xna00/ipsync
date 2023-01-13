@@ -23,7 +23,7 @@ async function main() {
     let host = readFileSync(hostsPath, 'utf8');
     ips.forEach(ip => {
       if (host.includes(ip.subject)) {
-        host = host.replace(new RegExp(`.+\s+${ip.subject}`), `${ip.text} ${ip.subject}`);
+        host = host.replace(new RegExp(`.+\\s+${ip.subject}`), `${ip.text} ${ip.subject}`);
       } else {
         host += `
           ${ip.text} ${ip.subject}`;
