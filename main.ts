@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const hostsPath = './hosts';
-import { user, pass, name, interval } from './config.json';
+import { user, pass, name, interval, netKey } from './config.json';
 
 if (!(user && pass && name && interval)) process.exit(1);
 
@@ -50,7 +50,7 @@ async function main() {
       from: `Ip Sync <xie09101@outlook.com>`,
       to: '<xie09101@outlook.com>',
       subject: `ip:${name}`,
-      text: getLocalIp(),
+      text: getLocalIp(netKey),
     });
     transporter.close();
   } catch (e) {
