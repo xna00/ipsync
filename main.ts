@@ -29,7 +29,7 @@ async function main() {
     });
 
     writeFileSync(resolve(__dirname, hostsPath), host);
-    let tmp = ips.find(ip => ip.subject === name && ip.text === getLocalIp());
+    let tmp = ips.find(ip => ip.subject === name && ip.text === getLocalIp(netKey));
     await remove((await search(`ip:${name}`)).filter(uid => uid !== tmp?.uid));
     await closeConnection();
     if (tmp) {
