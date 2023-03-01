@@ -5,9 +5,11 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const hostsPath = './hosts';
-import { user, pass, name, interval } from './config.json';
+import { user, pass, name, interval, netKey } from './config.json';
 
 if (!(user && pass && name && name.length && interval)) process.exit(1);
+
+const localIp = getLocalIp(netKey);
 
 console.log(user, pass, name, interval);
 initImap({ user, password: pass });
@@ -33,8 +35,8 @@ async function main() {
 
     writeFileSync(resolve(__dirname, hostsPath), host);
     const residue = name.filter((n) => {
-      let tmp = ips.find(ip => ip.subject === n && ip.text === getLocalIp());
-      remove(ips.filter(ip => ip.subject === n && ip.text !== getLocalIp()).map(ip => ip.uid));
+      let tmp = ips.find(ip => ip.subject === n && ip.text === localIp);
+      remove(ips.filter(ip => ip.subject === n && ip.text !== localIp).map(ip => ip.uid));
       if (tmp) {
         console.log(n, 'is same as ', tmp, 'skip');
       }
@@ -60,7 +62,7 @@ async function main() {
         from: `Ip Sync <xie09101@outlook.com>`,
         to: '<xie09101@outlook.com>',
         subject: `ip:[${n}]`,
-        text: getLocalIp(),
+        text: localIp,
       })
     ))
     transporter.close();
