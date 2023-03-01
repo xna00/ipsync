@@ -7,7 +7,7 @@ import { resolve } from 'path';
 const hostsPath = './hosts';
 import { user, pass, name, interval } from './config.json';
 
-if (!(user && pass && name && interval)) process.exit(1);
+if (!(user && pass && name && name.length && interval)) process.exit(1);
 
 console.log(user, pass, name, interval);
 initImap({ user, password: pass });
@@ -15,7 +15,10 @@ initImap({ user, password: pass });
 async function main() {
   try {
     await openConnectionAndInbox();
-    const ips = await detail(await search('ip:'));
+    const ips = (await detail(await search('ip:'))).map(ip => ({
+      ...ip,
+      subject: ip.subject.replace(/\[|\]/g, '')
+    }));
     console.log(ips);
     let host = readFileSync('/etc/hosts', 'utf8');
     ips.forEach(ip => {
@@ -29,12 +32,18 @@ async function main() {
     });
 
     writeFileSync(resolve(__dirname, hostsPath), host);
-    let tmp = ips.find(ip => ip.subject === name && ip.text === getLocalIp());
-    await remove((await search(`ip:${name}`)).filter(uid => uid !== tmp?.uid));
+    const residue = name.filter((n) => {
+      let tmp = ips.find(ip => ip.subject === n && ip.text === getLocalIp());
+      remove(ips.filter(ip => ip.subject === n && ip.text !== getLocalIp()).map(ip => ip.uid));
+      if (tmp) {
+        console.log(n, 'is same as ', tmp, 'skip');
+      }
+      return !tmp
+    })
     await closeConnection();
-    if (tmp) {
-      console.log('same as ', tmp, 'skip');
-      return;
+    if (!residue.length) {
+      console.log('nothing to sync')
+      return
     }
     const transporter = createTransport({
       host: 'smtp.office365.com',
@@ -46,12 +55,14 @@ async function main() {
       }
     });
 
-    transporter.sendMail({
-      from: `Ip Sync <xie09101@outlook.com>`,
-      to: '<xie09101@outlook.com>',
-      subject: `ip:${name}`,
-      text: getLocalIp(),
-    });
+    await Promise.allSettled(name.map(n =>
+      transporter.sendMail({
+        from: `Ip Sync <xie09101@outlook.com>`,
+        to: '<xie09101@outlook.com>',
+        subject: `ip:[${n}]`,
+        text: getLocalIp(),
+      })
+    ))
     transporter.close();
   } catch (e) {
     console.log(e);
