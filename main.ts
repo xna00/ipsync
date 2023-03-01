@@ -22,18 +22,21 @@ async function main() {
       subject: ip.subject.replace(/\[|\]/g, '')
     }));
     console.log(ips);
-    let host = readFileSync('/etc/hosts', 'utf8');
+    const host = readFileSync('/etc/hosts', 'utf8');
+    const entries = host.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length)
+      .map(line => line.split(/\s+/).reverse())
+    const m = Object.fromEntries(entries)
     ips.forEach(ip => {
-      if (host.includes(ip.subject)) {
-        host = host.replace(new RegExp(`(\d|\.)+\\s+${ip.subject}`), `${ip.text} ${ip.subject}`);
-      } else {
-        host += `
-          ${ip.text} ${ip.subject}
-          `;
-      }
-    });
+      m[ip.subject] = ip.text
+    })
 
-    writeFileSync(resolve(__dirname, hostsPath), host);
+    const newHost = Object.entries(m)
+      .map(entry => entry.reverse().join(' '))
+      .join('\n') + '\n'
+
+    writeFileSync(resolve(__dirname, hostsPath), newHost);
     const residue = name.filter((n) => {
       let tmp = ips.find(ip => ip.subject === n && ip.text === localIp);
       remove(ips.filter(ip => ip.subject === n && ip.text !== localIp).map(ip => ip.uid));
