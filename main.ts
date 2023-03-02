@@ -60,7 +60,7 @@ async function main() {
       }
     });
 
-    await Promise.allSettled(name.map(n =>
+    await Promise.allSettled(residue.map(n =>
       transporter.sendMail({
         from: `Ip Sync <xie09101@outlook.com>`,
         to: '<xie09101@outlook.com>',
